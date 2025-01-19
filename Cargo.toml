@@ -5,8 +5,11 @@ edition = "2021"
 
 [dependencies]
 tokio ={ version = "*", features = ["full"]}
+tokio-stream ={ version = "0.1.17"}
+async-stream ={ version = "*"}
 reqwest ={ version =  "*"}
 serde_urlencoded ={ version = "*"}
 serde_json ={ version = "*"}
 serde_derive = "*"
 chrono="*"
+

@@ -1,10 +1,13 @@
 use std::{iter::Filter, os::raw};
 
+use async_stream::stream;
 use chrono::{DateTime, Utc};
 use serde_json::Value;
 use tokio::{self, net::tcp::ReuniteError};
+use tokio_stream::Stream;
 use super::error;
 
+#[derive(Clone)]
 struct SearchResult{
     total_count:i64,
     total_count_filterd:i64,
@@ -12,6 +15,8 @@ struct SearchResult{
     kb_items:Vec<ResultItem>
 }
 
+
+#[derive(Clone)]
 struct ResultItem {
     title:String,
     click_uri:String,
@@ -79,6 +84,78 @@ impl SearchClient {
         return Ok(token.to_string());
 
     }
+
+
+    pub async fn search_stream(self,filter:SearchFilter<'_>) -> impl Stream<Item = Result<SearchResult,super::error::Error>> + use<'_>{
+
+        let url = "https://platform.cloud.coveo.com/rest/search/v2";
+        
+        let start_date = filter.start_date.map(|s_date| s_date.format("%Y/%m/%d").to_string());
+        let end_date = filter.end_date.map(|s_date| s_date.format("%Y/%m/%d").to_string());
+        let laungage = filter.language.unwrap_or_default();
+        let time_zone = filter.timezone.unwrap_or_default();
+        
+        let mut aq = String::new();
+        //日付入力用の処理
+        if start_date.is_some(){
+            aq += &format!("(@commondate >={}",start_date.clone().unwrap());
+
+            if end_date.is_some() {
+                aq += " AND ";
+            } else {
+                aq += ")";
+            }
+        } 
+        if end_date.is_some() {
+            if start_date.is_none() {
+                aq += "(";
+            }
+            aq += &format!("@commondate <={})",end_date.unwrap());
+        }
+
+        //言語フィルタ用の処理
+        aq += &format!("(@commonlanguage=={})",laungage);
+        
+
+        let form = [
+            ("q","".to_string()),
+            ("aq",aq.clone()),
+            ("timezone",time_zone.to_string()),
+            ("numberOfResults",filter.number_of_results.to_string()),
+            ("firstResult","0".to_string())
+            ];
+
+        return  stream! {
+            let mut result = self.post_serch(url, &form).await?;
+            yield(Ok(result.clone()));
+            //return Stream::;
+            //yied();
+            //すでに一回分取得しているため -1する
+            let page = result.total_count / filter.number_of_results - 1;
+    
+            //残りのページ分の結果を取得する
+            for i in 1..page {
+                let first_result = i * filter.number_of_results;
+    
+                let form = [
+                ("q","".to_string()),
+                ("aq",aq.clone()),
+                ("timezone",time_zone.to_string()),
+                ("numberOfResults",filter.number_of_results.to_string()),
+                ("firstResult", first_result.to_string())
+                ];
+    
+                let mut page =  self.post_serch(url, &form).await?;
+    
+                result.kb_items.append(&mut page.kb_items);
+                
+                yield(Ok(result.clone()));
+            }
+        };
+
+        todo!()
+    }
+
 
 
     pub async fn search(self,filter:SearchFilter<'_>) -> Result<SearchResult,super::error::Error>{

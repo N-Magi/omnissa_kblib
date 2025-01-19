@@ -20,6 +20,7 @@ pub struct PageClient{
 }
 impl PageClient {
 
+    
     pub async fn get_content(skb_num:String) -> Result<Page,super::error::Error>{
         
         //let skb_num = kb_num.to_string();
