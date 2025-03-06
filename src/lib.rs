@@ -1,6 +1,6 @@
-mod page;
-mod search;
-mod error;
+pub mod page;
+pub mod search;
+pub mod error;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

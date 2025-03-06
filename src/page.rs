@@ -7,12 +7,13 @@ use chrono::{self, DateTime, TimeZone, Utc,NaiveDateTime};
 use super::error;
 use crate::page;
 
-struct Page{
-    kb_num:i64,
-    create_date:chrono::DateTime<Utc>,
-    last_modified_date:chrono::DateTime<Utc>,
-    title:String,
-    content:String,
+#[derive(Debug,Clone) ]
+pub struct Page{
+    pub kb_num:i64,
+    pub create_date:chrono::DateTime<Utc>,
+    pub last_modified_date:chrono::DateTime<Utc>,
+    pub title:String,
+    pub content:String,
 }
 
 pub struct PageClient{
