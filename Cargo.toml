@@ -12,4 +12,5 @@ serde_urlencoded ={ version = "*"}
 serde_json ={ version = "*"}
 serde_derive = "*"
 chrono="*"
+regex="*"
 

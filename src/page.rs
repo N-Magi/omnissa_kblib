@@ -1,11 +1,12 @@
 
 use serde_json::Value;
 use tokio;
-use reqwest;
+use reqwest::{self, dns::Name};
 use std::{convert::Infallible, num::ParseIntError, str::FromStr, time};
 use chrono::{self, DateTime, TimeZone, Utc,NaiveDateTime};
 use super::error;
 use crate::page;
+use regex;
 
 #[derive(Debug,Clone) ]
 pub struct Page{
@@ -75,18 +76,20 @@ impl PageClient {
             .map_err(|f| super::error::Error::DataParsingFailedExeption(f.to_string()))?;
 
 
-        let Some(contents) = inner_json["content"].as_array() else {
+        let Some(json_contents) = inner_json["content"].as_array() else {
             return Err(super::error::Error::DataParsingFailedExeption("Getting Kb Contents".to_string()));
         };
 
-        todo!("Contntの読み取る部分が未完成");
+        let mut contents:String = String::new();
+        for raw_content in json_contents{
 
-        let mut contnt:String = String::new();
-        for raw_content in contents{
-            let Some(cnt) = raw_content.as_str() else {
-                continue;
-            };
-            contnt += cnt;
+            for (keys, value) in raw_content.as_object().unwrap() {
+                
+                let mut br = match_replace(r"<\s*br\s*>", value.as_str().unwrap().to_string(), "\n".to_string());
+                br = match_replace(r"<.*?>", br, "".to_string());
+                let content = format!("{}\n{}\n",keys,br);
+                contents += &content;
+            }
         }
 
         return Ok(Page {
@@ -94,10 +97,18 @@ impl PageClient {
             create_date:create_date.and_utc(),
             last_modified_date:last_modified_date.and_utc(),
             title: title.to_string(),
-            content: contnt,
+            content: contents,
         });
 
     }
+}
+
+fn match_replace(pattern:&str, text:String, replace:String) -> String {
+    let matcher = regex::Regex::new(pattern).unwrap();
+    
+    let a = matcher.replace_all(&text, replace);
+
+    return  a.into();
 }
 
 #[cfg(test)]

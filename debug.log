@@ -5,3 +5,5 @@
 [0216/190807.797:ERROR:registration_protocol_win.cc(108)] CreateFile: 指定されたファイルが見つかりません。 (0x2)
 [0216/212129.107:ERROR:registration_protocol_win.cc(108)] CreateFile: 指定されたファイルが見つかりません。 (0x2)
 [0218/234314.701:ERROR:registration_protocol_win.cc(108)] CreateFile: 指定されたファイルが見つかりません。 (0x2)
+[0306/230541.338:ERROR:registration_protocol_win.cc(108)] CreateFile: 指定されたファイルが見つかりません。 (0x2)
+[0310/215216.647:ERROR:registration_protocol_win.cc(108)] CreateFile: 指定されたファイルが見つかりません。 (0x2)
