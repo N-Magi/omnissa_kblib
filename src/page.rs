@@ -2,7 +2,7 @@
 use serde_json::Value;
 use tokio;
 use reqwest;
-use std::{str::FromStr, time};
+use std::{convert::Infallible, num::ParseIntError, str::FromStr, time};
 use chrono::{self, DateTime, TimeZone, Utc,NaiveDateTime};
 use super::error;
 use crate::page;
@@ -44,7 +44,8 @@ impl PageClient {
 
         let a = result.text().await.map_err(|f| super::error::Error::ContentLoadingFailedExeption(f.to_string()))?;
 
-        let instance = PageClient::deserialize(a)?;
+        let mut instance = PageClient::deserialize(a)?;
+        instance.kb_num = skb_num.parse().map_err(|f:ParseIntError| super::error::Error::DataParsingFailedExeption(f.to_string()))?;
         return Ok(instance);
     }
 
@@ -77,6 +78,8 @@ impl PageClient {
         let Some(contents) = inner_json["content"].as_array() else {
             return Err(super::error::Error::DataParsingFailedExeption("Getting Kb Contents".to_string()));
         };
+
+        todo!("Contntの読み取る部分が未完成");
 
         let mut contnt:String = String::new();
         for raw_content in contents{
